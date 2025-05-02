@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "867917384783",
+    "project_id": "gardens-united",
+    "storage_bucket": "gardens-united.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:867917384783:android:971f2758c0ab08e3ceee3a",
+        "android_client_info": {
+          "package_name": "com.example.garden"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqHsPy-nYYp-EfCVlPcjnmoIOaSMRGEgY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
