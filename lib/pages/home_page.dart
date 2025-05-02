@@ -14,10 +14,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<Garden> gardens = [];
   int gardenCount = 0;
-  bool isLoading = true;
-
-  TextEditingController plantNameController = TextEditingController();
-  TextEditingController plantImageUrlController = TextEditingController();
 
   @override
   void initState() {
@@ -30,7 +26,6 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       gardens = fetchedGardens;
       gardenCount = gardens.length;
-      isLoading = false;
     });
   }
   
@@ -38,6 +33,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: Text('Gardens (Placeholder)'),
         // title: Text(widget.title),
       ),
       backgroundColor: Colors.lightGreen,

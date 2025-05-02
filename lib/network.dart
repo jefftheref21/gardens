@@ -10,49 +10,52 @@ import 'package:firebase_storage/firebase_storage.dart';
 String url = "http://10.0.2.2:5000";
 
 Future<List<Plant>> fetchPlants(String gardenID) async {
-    final response = await http.get(Uri.parse("$url/garden"), headers: {
-      'Content-Type': 'application/json',
-    });
-    if (response.statusCode == 200) {
-      final List<dynamic> jsonResponse = json.decode(response.body)['plants'];
-      print(jsonResponse);
-      print(jsonResponse[0]['_id']);
-      List<Plant> plants = [];
-      for (var plant in jsonResponse) {
+  // Fetch plants from the server for a specific garden
+  final response = await http.get(Uri.parse("$url/garden/$gardenID"), headers: {
+    'Content-Type': 'application/json',
+  });
+  
+  if (response.statusCode == 200) {
+    final List<dynamic> jsonResponse = json.decode(response.body)['plants'];
+    print(jsonResponse);
+    print(jsonResponse[0]['_id']);
+    List<Plant> plants = [];
+    for (var plant in jsonResponse) {
+      if (plant['gardenID'] == gardenID) {
         plants.add(Plant.fromJson(plant));
       }
-      return plants;
-    } else {
-      throw Exception('Failed to load data');
     }
+    return plants;
+  } else {
+    throw Exception('Failed to load data');
+  }
 }
 
 Future<List<Garden>> fetchGardens() async {
-    final response = await http.get(Uri.parse("$url/home"), headers: {
-      'Content-Type': 'application/json',
-    });
-    if (response.statusCode == 200) {
-      final List<dynamic> jsonResponse = json.decode(response.body)['gardens'];
-      print(jsonResponse);
-      print(jsonResponse[0]['_id']);
-      List<Garden> gardens = [];
-      for (var garden in jsonResponse) {
-        gardens.add(Garden.fromJson(garden));
-      }
-      return gardens;
-    } else {
-      throw Exception('Failed to load data');
+  final response = await http.get(Uri.parse("$url/home"), headers: {
+    'Content-Type': 'application/json',
+  });
+  if (response.statusCode == 200) {
+    final List<dynamic> jsonResponse = json.decode(response.body)['gardens'];
+    print(jsonResponse);
+    print(jsonResponse[0]['_id']);
+    List<Garden> gardens = [];
+    for (var garden in jsonResponse) {
+      gardens.add(Garden.fromJson(garden));
     }
+    return gardens;
+  } else {
+    throw Exception('Failed to load data');
+  }
 }
 
 Future<String> addPlant(String gardenID, String name, String imageUrl, String description) async {
   final response = await http.post(
-    Uri.parse("$url/garden"),
+    Uri.parse("$url/garden/$gardenID"),
     headers: {
       'Content-Type': 'application/json',
     },
     body: json.encode({
-      'gardenID': gardenID,
       'name': name,
       'imageUrl': imageUrl,
       'description': description,

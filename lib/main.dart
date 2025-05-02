@@ -31,7 +31,7 @@ class MainApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
       ),
-      home: GardenPage(),
+      // home: HomePage(),
       initialRoute: '/',
       routes: {
         '/': (context) => HomePage(),

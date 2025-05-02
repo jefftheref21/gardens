@@ -18,17 +18,15 @@ class Database():
         self.comments = self.db['comments']
         self.gardens = self.db['gardens']
 
-        self.plants.create_index([("name", "text"), ("gardenID", 1)], name='plant_index')
-
     # Using indexes to search for plants by gardenID
     def get_all_plants_by_gardenID(self, gardenID):
-        plants = self.plants.find({"gardenID": gardenID})
+        plants = self.plants.find({"gardenID": ObjectId(gardenID)})
         return plants
 
     def add_plant(self, gardenID, name, imageUrl, description):
-        plant = {"gardenID": gardenID, "name": name, "imageUrl": imageUrl, "description": description}
+        plant = {"gardenID": ObjectId(gardenID), "name": name, "imageUrl": imageUrl, "description": description}
         self.plants.insert_one(plant)
-        id = self.plants.find_one({"gardenID": gardenID, "name": name, "imageUrl": imageUrl,})["_id"]
+        id = self.plants.find_one({"gardenID": ObjectId(gardenID), "name": name, "imageUrl": imageUrl,})["_id"]
         return id
 
     def update_plant(self, plantID, name, imageUrl, description):
@@ -93,14 +91,14 @@ class Database():
         self.comments.delete_many({})
         self.gardens.delete_many({})
 
-class Garden(Document):
+class Gardens(Document):
     name = StringField(required=True)
     description = StringField()
     imageUrl = StringField()
     location = StringField()
 
-class Plant(Document):
-    gardenID = ReferenceField(Garden, reverse_delete_rule=4)
+class Plants(Document):
+    gardenID = ReferenceField(Gardens, reverse_delete_rule=4)
     name = StringField(required=True)
     imageUrl = StringField()
     description = StringField()
@@ -127,13 +125,58 @@ if __name__ == '__main__':
     db.add_plant(gardenID=gardenID2, name="Daffodil", imageUrl="daffodil.png", description="A spring perennial flower with a trumpet-shaped structure.")
 
     load_dotenv()
-    mongo_uri = os.getenv("MONGO_URI")
-    connect(host=mongo_uri, tlsCAFile=ca)
+    mongo_orm_uri = os.getenv("MONGO_ORM_URI")
+    connect(host=mongo_orm_uri)
 
-    my_garden = Garden(name="Bonsai Haven", description="A collection of miniature trees.", imageUrl="bonsai.png", location="789 Bonsai St")
-    my_garden.save()
+    garden3 = Gardens(name="Italian Heaven", description="A collection of miniature trees.", imageUrl="bonsai.png", location="789 Bonsai St")
+    garden3.save()
 
-    db.plants.find({"gardenID": gardenID1}).explain
+    tomato = Plants(gardenID=garden3, name="Tomato", imageUrl="tomato.png", description="A red fruit used in salads and sauces.")
+    basil = Plants(gardenID=garden3, name="Basil", imageUrl="basil.png", description="A fragrant herb used in cooking.")
+    mint = Plants(gardenID=garden3, name="Mint", imageUrl="mint.png", description="A refreshing herb used in drinks and desserts.")
+    garlic = Plants(gardenID=garden3, name="Garlic", imageUrl="garlic.png", description="A pungent bulb used in cooking.")
+    onion = Plants(gardenID=garden3, name="Onion", imageUrl="onion.png", description="A bulbous vegetable used in cooking.")
+
+    tomato.save()
+    basil.save()
+    mint.save()
+    garlic.save()
+    onion.save()
+
+    garden4 = Gardens(name="Cactus Garden", description="A collection of desert plants.", imageUrl="cactus.png", location="321 Cactus Ave")
+    garden4.save()
+
+    cactus = Plants(gardenID=garden4, name="Cactus", imageUrl="cactus.png", description="A succulent plant adapted to arid environments.")
+    aloe_vera = Plants(gardenID=garden4, name="Aloe Vera", imageUrl="aloe_vera.png", description="A succulent plant known for its medicinal properties.")
+    agave = Plants(gardenID=garden4, name="Agave", imageUrl="agave.png", description="A succulent plant used to make tequila.")
+    prickly_pear = Plants(gardenID=garden4, name="Prickly Pear", imageUrl="prickly_pear.png", description="A cactus with edible fruit.")
+    yucca = Plants(gardenID=garden4, name="Yucca", imageUrl="yucca.png", description="A plant with sword-like leaves and edible roots.")
+
+    cactus.save()
+    aloe_vera.save()
+    agave.save()
+    prickly_pear.save()
+    yucca.save()
+
+    # Find a garden
+    garden = Gardens.objects(name="Cactus Garden").first()
+
+    # Get all plants in that garden
+    plants = Plants.objects(gardenID=garden)
+
+    for plant in plants:
+        print(plant.name, plant.imageUrl, plant.description)
+
+    db.plants.create_index([("gardenID", 1)], name='plant_index')
+
+    plants = db.plants.find({"gardenID": gardenID1})
+    for plant in plants:
+        print(plant["name"], plant["imageUrl"], plant["description"])
+
+    explanation = db.plants.find({ "gardenID": gardenID1 }).explain()
+
+    import pprint
+    pprint.pprint(explanation)
 
     # db.add_user("jeffrey", "password")
     # db.add_user("molly", "password")

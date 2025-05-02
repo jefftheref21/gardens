@@ -14,32 +14,44 @@ app = Flask(__name__)
 db = Database()
 
 @app.route('/home', methods=['GET'])
-def show():
-    db_plants = db.get_all_plants()
+def home():
+    db_gardens = db.get_all_gardens()
+    gardens = list(db_gardens)
+    for garden in gardens:
+        garden['_id'] = str(garden['_id'])
+    print(gardens)
+    return {"gardens": gardens}, 200
+
+@app.route('/garden/<gardenID>', methods=['GET'])
+def get_plants(gardenID):
+    db_plants = db.get_all_plants_by_gardenID(gardenID)
     plants = list(db_plants)
     for plant in plants:
         plant['_id'] = str(plant['_id'])
+        plant['gardenID'] = str(plant['gardenID'])
     print(plants)
     return {"plants": plants}, 200
 
-@app.route('/home', methods=['POST'])
-def add():
+@app.route('/garden/<gardenID>', methods=['POST'])
+def add(gardenID):
     name = request.json['name']
     imageUrl = request.json['imageUrl']
+    description = request.json['description']
     print (name, imageUrl)
-    id = db.add_plant(name, imageUrl)
+    id = db.add_plant(gardenID, name, imageUrl, description)
     id = str(id)
     return {"plantID": id, "message": "Plant added"}, 200
 
-@app.route('/home', methods=['PUT'])
+@app.route('/garden', methods=['PUT'])
 def update():
     plant_id = request.json['plantID']
     name = request.json['name']
     imageUrl = request.json['imageUrl']
-    db.update_plant(plant_id, name, imageUrl)
+    description = request.json['description']
+    db.update_plant(plant_id, name, imageUrl, description)
     return {"message": "Plant updated"}, 200
 
-@app.route('/home', methods=['DELETE'])
+@app.route('/garden', methods=['DELETE'])
 def delete():
     plant_id = request.json['plantID']
     db.delete_plant(plant_id)

@@ -1,28 +1,31 @@
 import 'package:flutter/material.dart';
 import '../models/plant.dart';
 import '../network.dart';
+import 'package:image_picker/image_picker.dart';
 
 class GardenPage extends StatefulWidget {
   const GardenPage({super.key});
   @override
   State<GardenPage> createState() => _GardenPageState();
 }
-
 class _GardenPageState extends State<GardenPage> {
+  late Future<void> _initFuture;
   List<Plant> plants = [];
   int plantCount = 0;
-  bool isLoading = true;
   late String gardenID;
-  late String gardenName;
+  late String name;
 
   TextEditingController plantNameController = TextEditingController();
   TextEditingController plantImageUrlController = TextEditingController();
   TextEditingController plantDescriptionController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    init();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)!.settings.arguments as Map;
+    gardenID = args['gardenID'];
+    name = args['name'];
+    _initFuture = init();
   }
 
   Future<void> init() async {
@@ -30,115 +33,120 @@ class _GardenPageState extends State<GardenPage> {
     setState(() {
       plants = fetchedPlants;
       plantCount = plants.length;
-      isLoading = false;
     });
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final args = ModalRoute.of(context)!.settings.arguments as Map;
-    gardenID = args['gardenId'];
-    gardenName = args['name'];
-  }
-  
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(gardenName),
+        title: Text(name),
       ),
       backgroundColor: Colors.lightGreen,
-      body: SafeArea(
-        child: ListView.builder(
-          itemCount: plantCount,
-          itemBuilder: (BuildContext context, int index) {
-            return GestureDetector(
-              onTap: () {
-                plantNameController.text = plants[index].name;
-                plantImageUrlController.text = plants[index].imageUrl;
-                
-                showDialog<String>(
-                  context: context,
-                  builder: (BuildContext context) => Dialog(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          const Text('Update plant'),
-                          const SizedBox(height: 15),
-                          TextField(
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              labelText: 'Plant Name',
+      body: FutureBuilder<void>(
+        future: _initFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            // Show a loading indicator while waiting
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            // Handle errors
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else {
+            // Render the list of plants once data is loaded
+            return SafeArea(
+              child: ListView.builder(
+                itemCount: plantCount,
+                itemBuilder: (BuildContext context, int index) {
+                  return GestureDetector(
+                    onTap: () {
+                      plantNameController.text = plants[index].name;
+                      plantImageUrlController.text = plants[index].imageUrl;
+                      plantDescriptionController.text = plants[index].description ?? '';
+
+                      showDialog<String>(
+                        context: context,
+                        builder: (BuildContext context) => Dialog(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                const Text('Update plant'),
+                                const SizedBox(height: 15),
+                                TextField(
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    labelText: 'Plant Name',
+                                  ),
+                                  controller: plantNameController,
+                                ),
+                                const SizedBox(height: 15),
+                                TextField(
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    labelText: 'Plant Image URL',
+                                  ),
+                                  controller: plantImageUrlController,
+                                ),
+                                const SizedBox(height: 15),
+                                TextField(
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    labelText: 'Plant Description',
+                                  ),
+                                  controller: plantDescriptionController,
+                                ),
+                                const SizedBox(height: 15),
+                                TextButton(
+                                  onPressed: () async {
+                                    final response = await updatePlant(
+                                      plants[index].plantID,
+                                      plantNameController.text,
+                                      plantImageUrlController.text,
+                                      plantDescriptionController.text,
+                                    );
+                                    setState(() {
+                                      plants[index].name = plantNameController.text;
+                                      plants[index].imageUrl = plantImageUrlController.text;
+                                      plants[index].description = plantDescriptionController.text;
+                                    });
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text('Update'),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    await deletePlant(plants[index].plantID);
+                                    setState(() {
+                                      plants.removeAt(index);
+                                      plantCount = plants.length;
+                                    });
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text('Delete'),
+                                ),
+                              ],
                             ),
-                            controller: plantNameController,
                           ),
-                          const SizedBox(height: 15),
-                          TextField(
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              labelText: 'Plant Image URL',
-                            ),
-                            controller: plantImageUrlController,
-                          ),
-                          const SizedBox(height: 15),
-                          TextField(
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              labelText: 'Plant Description',
-                            ),
-                            controller: plantDescriptionController,
-                          ),
-                          const SizedBox(height: 15),
-                          TextButton(
-                            onPressed: () async {
-                              print(plantNameController.text);
-                              print(plantImageUrlController.text);
-                              final response = await updatePlant(
-                                plants[index].plantID,
-                                plantNameController.text,
-                                plantImageUrlController.text,
-                                plantDescriptionController.text,
-                              );
-                              setState(() {
-                                plants[index].name = plantNameController.text;
-                                plants[index].imageUrl = plantImageUrlController.text;
-                                plants[index].description = plantDescriptionController.text;
-                              });
-                              Navigator.pop(context);
-                            },
-                            child: const Text('Update'),
-                          ),
-                          TextButton(
-                            onPressed: () async {
-                              await deletePlant(plants[index].plantID);
-                              setState(() {
-                                plants.removeAt(index);
-                                plantCount = plants.length;
-                              });
-                              Navigator.pop(context);
-                            },
-                            child: const Text('Delete'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),  
-                );
-              },
-              child: buildPlantCard(plants[index]),
+                        ),
+                      );
+                    },
+                    child: buildPlantCard(plants[index]),
+                  );
+                },
+              ),
             );
-          },
-        ),
+          }
+        },
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.green,
         onPressed: () {
           plantNameController.clear();
           plantImageUrlController.clear();
+          plantDescriptionController.clear();
 
           showDialog<String>(
             context: context,
@@ -178,7 +186,6 @@ class _GardenPageState extends State<GardenPage> {
                     TextButton(
                       onPressed: () async {
                         final response = await addPlant(
-
                           gardenID,
                           plantNameController.text,
                           plantImageUrlController.text,
@@ -190,10 +197,10 @@ class _GardenPageState extends State<GardenPage> {
                             plantID: response,
                             name: plantNameController.text,
                             imageUrl: plantImageUrlController.text,
+                            description: plantDescriptionController.text,
                           ));
                           plantCount = plants.length;
                         });
-                        print(plants);
                         Navigator.pop(context);
                       },
                       child: const Text('Add'),
@@ -219,29 +226,35 @@ class _GardenPageState extends State<GardenPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: <Widget>[
-            // Image(image: AssetImage(plant.imageUrl)),
             Text(
               plant.imageUrl + "_placeholder",
               style: const TextStyle(
                 fontSize: 16.0,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'Palantino',
-              )
+              ),
             ),
-            const SizedBox(
-              height: 14.0
-            ),
+            const SizedBox(height: 14.0),
             Text(
               plant.name,
               style: const TextStyle(
                 fontSize: 20.0,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'Palantino',
-              )
-            )
-          ]
-        )
-      )
+              ),
+            ),
+            const SizedBox(height: 14.0),
+            Text(
+              plant.description ?? 'No description available',
+              style: const TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.w400,
+                fontFamily: 'Palantino',
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
