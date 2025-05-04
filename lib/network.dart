@@ -104,12 +104,16 @@ Future<void> deletePlant(String plantID) async {
   }
 }
 
-Future<String> uploadImage(XFile imageFile, String userId, String type) async {
+Future<String> uploadImage(XFile imageFile, String _id, String type) async {
   final storageRef = FirebaseStorage.instance.ref();
-  String folder = type == "user" ? "user_uploads" : "plant_uploads";
-  final imagesRef = storageRef.child("$folder/$userId/${DateTime.now().millisecondsSinceEpoch}.jpg");
+  final imagesRef = storageRef.child("{$type}_uploads/$_id/${DateTime.now().millisecondsSinceEpoch}.jpg");
 
   await imagesRef.putFile(File(imageFile.path));
   String downloadURL = await imagesRef.getDownloadURL();
   return downloadURL;
+}
+
+Future<String> getImageUrl(String type, String imagePath) async {
+  final storageRef = FirebaseStorage.instance.ref().child('{$type}_uploads/$imagePath');
+  return await storageRef.getDownloadURL();
 }

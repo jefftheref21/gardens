@@ -1,23 +1,23 @@
 class User {
   String userID;
   String username;
-  String password;
   String name;
   String? email;
   String? phoneNumber;
   String? profilePicUrl;
-  String? bio;
+  String? biography;
+  List<Map<String, String>> gardenIDs;
 
   // Named parameter constructor with required fields
   User({
     required this.userID,
     required this.username,
-    required this.password,
     required this.name,
     this.email,
     this.phoneNumber,
     this.profilePicUrl,
-    this.bio,
+    this.biography,
+    this.gardenIDs = const [],
   });
 
   // Factory constructor to create a User from JSON
@@ -26,11 +26,13 @@ class User {
       userID: json['_id'] as String,
       username: json['username'] as String,
       name: json['name'] as String,
-      password: json['password'] as String,
       email: json['email'] as String?,
       phoneNumber: json['phoneNumber'] as String?,
       profilePicUrl: json['profilePicUrl'] as String?,
-      bio: json['bio'] as String?,
+      biography: json['biography'] as String?,
+      gardenIDs: List<Map<String, String>>.from(
+        (json['gardenIDs'] as List<dynamic>).map((x) => x as Map<String, String>),
+      ),
     );
   }
 
@@ -40,11 +42,11 @@ class User {
       'userID': userID,
       'username': username,
       'name': name,
-      'password': password,
       'email': email,
       'phoneNumber': phoneNumber,
       'profilePicUrl': profilePicUrl,
-      'bio': bio,
+      'biography': biography,
+      'gardenIDs': gardenIDs,
     };
   }
 }
