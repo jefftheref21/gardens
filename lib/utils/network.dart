@@ -5,7 +5,8 @@ import '../models/plant.dart';
 import '../models/garden.dart';
 import '../models/stats.dart';
 
-String url = "http://10.0.2.2:5000";
+// String url = "http://10.0.2.2:5000";
+String url = "http://localhost:5000";
 
 Future<List<Plant>> fetchPlants(String gardenID) async {
   // Fetch plants from the server for a specific garden

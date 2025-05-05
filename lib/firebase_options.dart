@@ -64,6 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '867917384783',
     projectId: 'gardens-united',
     storageBucket: 'gardens-united.firebasestorage.app',
+    iosClientId: '867917384783-42kkkvnrppb1ufj74cnr00m5ml8936ja.apps.googleusercontent.com',
     iosBundleId: 'com.example.garden',
   );
 
@@ -73,6 +74,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '867917384783',
     projectId: 'gardens-united',
     storageBucket: 'gardens-united.firebasestorage.app',
+    iosClientId: '867917384783-42kkkvnrppb1ufj74cnr00m5ml8936ja.apps.googleusercontent.com',
     iosBundleId: 'com.example.garden',
   );
 
@@ -85,4 +87,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'gardens-united.firebasestorage.app',
     measurementId: 'G-8NFVXQN5QD',
   );
+
 }
