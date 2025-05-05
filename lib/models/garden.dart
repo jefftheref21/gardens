@@ -1,4 +1,4 @@
-import 'location.dart';
+// import 'location.dart';
 
 class Garden {
   String gardenID;
@@ -10,6 +10,7 @@ class Garden {
   String city;
   String state;
   String zipcode;
+  double rating;
   List<String> userIDs;
 
   Garden({
@@ -21,6 +22,7 @@ class Garden {
     required this.city,
     required this.state,
     required this.zipcode,
+    required this.rating,
     // required this.location,
     this.userIDs = const [],
   });
@@ -36,6 +38,7 @@ class Garden {
       city: json['city'] as String,
       state: json['state'] as String,
       zipcode: json['zipcode'] as String,
+      rating: (json['rating'] as num).toDouble(),
       userIDs: List<String>.from(json['userIDs'].map((x) => x.toString())),
     );
   }
@@ -51,6 +54,7 @@ class Garden {
       'city': city,
       'state': state,
       'zipcode': zipcode,
+      'rating': rating,
       'userIDs': userIDs,
     };
   }

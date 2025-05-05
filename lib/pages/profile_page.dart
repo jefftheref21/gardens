@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../models/garden.dart';
-import '../network.dart';
+import '../utils/network.dart';
 import 'package:go_router/go_router.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -68,7 +68,6 @@ class _ProfilePageState extends State<ProfilePage> {
               );
             },
           ),
-
         ],
       ),
     );

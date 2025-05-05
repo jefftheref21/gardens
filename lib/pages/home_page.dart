@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import '../models/garden.dart';
-import '../network.dart';
+import 'package:garden/models/garden.dart';
+import 'package:garden/utils/network.dart';
+import 'package:garden/utils/image_network.dart';
+import 'package:garden/widgets/garden_widget.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter/services.dart';
+import 'dart:io';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,6 +19,13 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<Garden> gardens = [];
   int gardenCount = 0;
+
+  TextEditingController gardenNameController = TextEditingController();
+  TextEditingController gardenDescriptionController = TextEditingController();
+  TextEditingController gardenCityController = TextEditingController();
+  TextEditingController gardenStateController = TextEditingController();
+  TextEditingController gardenZipCodeController = TextEditingController();
+  TextEditingController gardenRatingController = TextEditingController();
 
   @override
   void initState() {
@@ -46,6 +58,14 @@ class _HomePageState extends State<HomePage> {
                         'username' : 'username_placeholder', });
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: 'Explore',
+            onPressed: () {
+              // Go to explore page
+              context.go('/explore');
+            },
+          ),
         ],
       ),
       backgroundColor: Colors.lightGreen,
@@ -56,7 +76,7 @@ class _HomePageState extends State<HomePage> {
             return GestureDetector(
               onTap: () {
                 // Go to add garden page
-                context.go('/garden',
+                context.push('/garden',
                   extra: {'gardenID': gardens[index].gardenID,
                           'name' : gardens[index].name, });
               },
@@ -65,42 +85,150 @@ class _HomePageState extends State<HomePage> {
           },
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showAddGardenDialog(context);
+        },
+        tooltip: 'Add Garden',
+        child: const Icon(Icons.add),
+      ),
     );
   }
 
-  Widget buildGardenCard(Garden garden) {
-    return Card(
-      elevation: 2.0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
+  void showAddGardenDialog(BuildContext context) {
+    File? _imageFile;
+    final ImagePicker _picker = ImagePicker();
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => Dialog(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const Text('Add new garden'),
+              const SizedBox(height: 15),
+              TextField(
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Garden Name',
+                ),
+                controller: gardenNameController,
+              ),
+              const SizedBox(height: 15),
+              // Image File Picker
+              _imageFile == null
+                  ? const Text('No image selected.')
+                  : Image.file(
+                      _imageFile!,
+                      height: 150,
+                      width: 150,
+                      fit: BoxFit.cover,
+                    ),
+              const SizedBox(height: 15),
+              ElevatedButton(
+                onPressed: () async {
+                  final XFile? pickedFile =
+                      await _picker.pickImage(source: ImageSource.gallery);
+                  if (pickedFile != null) {
+                    setState(() {
+                      _imageFile = File(pickedFile.path);
+                    });
+                  }
+                },
+                child: const Text('Pick Image'),
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Plant Description',
+                ),
+                controller: gardenDescriptionController,
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'City',
+                ),
+                controller: gardenCityController,
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'State',
+                ),
+                controller: gardenStateController,
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'ZIP Code',
+                ),
+                controller: gardenZipCodeController,
+              ),
+              TextField(
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
+                decoration: const InputDecoration(
+                  labelText: 'Enter a double value',
+                  border: OutlineInputBorder(),
+                ),
+                controller: gardenRatingController,
+              ),
+              const SizedBox(height: 15),
+              TextButton(
+                onPressed: () async {
+                  // Check if the image file is null before proceeding
+                  if (_imageFile == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please select an image')),
+                    );
+                    return;
+                  }
+                  print(gardenNameController.text);
+                  print(gardenDescriptionController.text);
+                  print(_imageFile!.path);
+
+                  double? rating = double.tryParse(gardenRatingController.text);
+
+                  // Upload the image to Firebase Storage and get the URL
+                  // String? imageUrl;
+                  // imageUrl = await uploadImage(
+                  //   XFile(_imageFile!.path),
+
+                  //   "garden",
+                  // );
+
+                  // final response = await addGarden(
+                  //   widget.gardenID,
+                  //   plantNameController.text,
+                  //   imageUrl,
+                  //   plantDescriptionController.text,
+                  // );
+                  // setState(() {
+                  //   plants.add(Plant(
+                  //     gardenID: widget.gardenID,
+                  //     plantID: response,
+                  //     name: plantNameController.text,
+                  //     imageUrl: imageUrl!,
+                  //     description: plantDescriptionController.text,
+                  //   ));
+                  //   plantCount = plants.length;
+                    
+                  // });
+                  context.pop();
+                },
+                child: const Text('Add'),
+              ),
+            ],
+          ),
+        ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: <Widget>[
-            // ClipRRect(
-            //   borderRadius: BorderRadius.circular(10.0),
-            //   child: Image.network(
-            //     garden.imageUrl,
-            //     height: 100.0,
-            //     width: 100.0,
-            //     fit: BoxFit.cover,
-            //   ),
-            // ),
-            const SizedBox(
-              height: 14.0
-            ),
-            Text(
-              garden.name,
-              style: const TextStyle(
-                fontSize: 20.0,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'Palantino',
-              )
-            )
-          ]
-        )
-      )
     );
   }
 }

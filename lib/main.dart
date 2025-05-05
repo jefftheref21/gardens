@@ -4,7 +4,9 @@ import 'pages/garden_page.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'pages/profile_page.dart';
+import 'pages/explore_page.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'firebase_options.dart';
 import 'package:go_router/go_router.dart';
 
@@ -18,6 +20,10 @@ void main() async {
   ]);
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+  );
+  await FirebaseAppCheck.instance.activate(
+    // webRecaptchaSiteKey: 'recaptcha-v3-site-key',
+    androidProvider: AndroidProvider.playIntegrity,
   );
   runApp(const MainApp());
 }
@@ -55,6 +61,10 @@ final GoRouter _router = GoRouter(
           name: args?['name'],
         );
       },
+    ),
+    GoRoute(
+      path: '/explore',
+      builder: (context, state) => const ExplorePage(),
     ),
   ],
 );

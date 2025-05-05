@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import '../models/plant.dart';
-import '../network.dart';
+import 'package:garden/models/plant.dart';
+import 'package:garden/utils/network.dart';
+import 'package:garden/utils/image_network.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
+import 'package:flutter/services.dart';
 
 class GardenPage extends StatefulWidget {
   final String gardenID;
@@ -23,6 +23,10 @@ class _GardenPageState extends State<GardenPage> {
 
   TextEditingController plantNameController = TextEditingController();
   TextEditingController plantDescriptionController = TextEditingController();
+  TextEditingController plantAgeController = TextEditingController();
+
+  // Cache for image URLs
+  final Map<String, String> _imageCache = {};
 
   @override
   void initState() {
@@ -98,6 +102,7 @@ class _GardenPageState extends State<GardenPage> {
   }
 
   void showPlantDialog(BuildContext context, int index) {
+    String? currentImageUrl = _imageCache[plants[index].plantID];
     File? _imageFile;
     final ImagePicker _picker = ImagePicker();
     showDialog<String>(
@@ -120,8 +125,15 @@ class _GardenPageState extends State<GardenPage> {
               ),
               const SizedBox(height: 15),
               // Image File Picker
-              _imageFile == null
-                  ? const Text('No image selected.')
+              currentImageUrl == null && _imageFile == null
+                ? const Text('No image selected.')
+                : currentImageUrl != null
+                  ? Image.network(
+                      currentImageUrl,
+                      height: 150,
+                      width: 150,
+                      fit: BoxFit.cover,
+                    )
                   : Image.file(
                       _imageFile!,
                       height: 150,
@@ -141,6 +153,7 @@ class _GardenPageState extends State<GardenPage> {
                 },
                 child: const Text('Pick Image'),
               ),
+              const SizedBox(height: 15),
               TextField(
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
@@ -167,11 +180,21 @@ class _GardenPageState extends State<GardenPage> {
                     imageUrl ?? plants[index].imageUrl,
                     plantDescriptionController.text,
                   );
-                  setState(() {
-                    plants[index].name = plantNameController.text;
-                    plants[index].imageUrl = imageUrl ?? plants[index].imageUrl;
-                    plants[index].description = plantDescriptionController.text;
-                  });
+                  if (response) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Plant updated successfully')),
+                    );
+                    setState(() {
+                      plants[index].name = plantNameController.text;
+                      plants[index].imageUrl = imageUrl ?? plants[index].imageUrl;
+                      plants[index].description = plantDescriptionController.text;
+                    });
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Failed to update plant')),
+                    );
+                  }
+                  
                   context.pop();
                 },
                 child: const Text('Update'),
@@ -197,7 +220,6 @@ class _GardenPageState extends State<GardenPage> {
   void showAddPlantDialog(BuildContext context) {
     File? _imageFile;
     final ImagePicker _picker = ImagePicker();
-
     showDialog<String>(
       context: context,
       builder: (BuildContext context) => Dialog(
@@ -248,6 +270,16 @@ class _GardenPageState extends State<GardenPage> {
                 controller: plantDescriptionController,
               ),
               const SizedBox(height: 15),
+              TextField(
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Plant Age',
+                ),
+                controller: plantAgeController,
+              ),
+              const SizedBox(height: 15),
               TextButton(
                 onPressed: () async {
                   // Check if the image file is null before proceeding
@@ -257,6 +289,10 @@ class _GardenPageState extends State<GardenPage> {
                     );
                     return;
                   }
+                  print(plantNameController.text);
+                  print(plantDescriptionController.text);
+                  print(_imageFile!.path);
+
                   // Upload the image to Firebase Storage and get the URL
                   String? imageUrl;
                   imageUrl = await uploadImage(
@@ -271,6 +307,8 @@ class _GardenPageState extends State<GardenPage> {
                     imageUrl,
                     plantDescriptionController.text,
                   );
+
+                  double? age = double.tryParse(plantAgeController.text);
                   setState(() {
                     plants.add(Plant(
                       gardenID: widget.gardenID,
@@ -278,8 +316,10 @@ class _GardenPageState extends State<GardenPage> {
                       name: plantNameController.text,
                       imageUrl: imageUrl!,
                       description: plantDescriptionController.text,
+                      age: age!,
                     ));
                     plantCount = plants.length;
+                    
                   });
                   context.pop();
                 },
@@ -303,7 +343,7 @@ class _GardenPageState extends State<GardenPage> {
         child: Column(
           children: <Widget>[
             FutureBuilder<String>(
-              future: getImageUrl("plant", plant.imageUrl), // Fetch the image URL
+              future: getCachedImageUrl(_imageCache, plant.plantID, plant.imageUrl),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const SizedBox(

@@ -4,6 +4,7 @@ class Plant {
   String name;
   String imageUrl;
   String? description; // Optional field
+  double age; // Mainly for trees
   
   Plant({
     required this.plantID,
@@ -11,6 +12,7 @@ class Plant {
     required this.name,
     required this.imageUrl,
     this.description,
+    required this.age,
   });
 
   factory Plant.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class Plant {
       name: json['name'] as String,
       imageUrl: json['imageUrl'] as String,
       description: json['description'] as String?,
+      age: json['age'] as double,
     );
   }
   Map<String, dynamic> toJson() {
@@ -29,6 +32,7 @@ class Plant {
       'name': name,
       'imageUrl': imageUrl,
       'description': description,
+      'age': age,
     };
   }
 }

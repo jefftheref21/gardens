@@ -6,7 +6,7 @@ class User {
   String? phoneNumber;
   String? profilePicUrl;
   String? biography;
-  List<Map<String, String>> gardenIDs;
+  List<String> gardenIDs;
 
   // Named parameter constructor with required fields
   User({
@@ -30,9 +30,7 @@ class User {
       phoneNumber: json['phoneNumber'] as String?,
       profilePicUrl: json['profilePicUrl'] as String?,
       biography: json['biography'] as String?,
-      gardenIDs: List<Map<String, String>>.from(
-        (json['gardenIDs'] as List<dynamic>).map((x) => x as Map<String, String>),
-      ),
+      gardenIDs: List<String>.from(json['gardenIDs'].map((x) => x.toString())),
     );
   }
 
